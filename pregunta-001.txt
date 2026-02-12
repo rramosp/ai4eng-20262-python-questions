@@ -1,0 +1,13 @@
+El Problema:
+Recibes un DataFrame de pandas "sucio" que contiene valores numéricos faltantes (NaN) y características en escalas muy diferentes. Debes preparar estos datos para un algoritmo de ML sensible a la escala.
+
+Tu Misión:
+Escribe una función llamada preparar_datos(df, target_col) que realice lo siguiente:
+
+1. Separe las características (X) de la variable objetivo (y, especificada por target_col).
+
+2. Impute los valores faltantes en X usando el promedio de cada columna (utilizando SimpleImputer de sklearn).
+
+3. Escale las características imputadas para que tengan media 0 y desviación estándar 1 (utilizando StandardScaler de sklearn).
+
+4. Devuelva dos arrays de numpy: la matriz X procesada y el vector y.
