@@ -12,7 +12,8 @@ def limpiar_dataset_ventas(df: pd.DataFrame) -> pd.DataFrame:
     
     # 3. Convertir la columna 'fecha' a datetime
     if 'fecha' in df.columns:
-        print (df['fecha'])
+        df['fecha'] = df['fecha'].ffill()
+        print (list(df['fecha'].values))
         df['fecha'] = pd.to_datetime(df['fecha'])
     
     # 4. Imputar valores nulos en columnas numéricas con la mediana
