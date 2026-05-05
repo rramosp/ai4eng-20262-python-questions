@@ -1,36 +1,35 @@
 import pandas as pd
 import numpy as np
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
-def preparar_datos(df, target_col):
-    """
-    Toma un DataFrame, separa la variable objetivo, imputa valores nulos en las 
-    características (X) y las escala para tener media 0 y desviación estándar 1.
-    """
+def clasificar_sensores_con_ventanas(df, target_col, ventana=3):
+    # 1. Calcular la desviación estándar móvil en columnas numéricas
+    # Conservamos solo las numéricas para el rolling, luego reincorporamos el target
+    df_numeric = df.select_dtypes(include=[np.number]).drop(columns=[target_col], errors='ignore')
+    df_rolling = df_numeric.rolling(window=ventana).std()
     
-    # 1. Separar características (X) y variable objetivo (y)
-    # Eliminamos la columna objetivo para obtener solo las features
-    X = df.drop(columns=[target_col])
+    # Añadimos la columna objetivo de vuelta al dataframe transformado
+    df_rolling[target_col] = df[target_col]
     
-    # Convertimos la columna objetivo a un array de numpy
-    y = df[target_col].to_numpy()
+    # 2. Sustituir infinitos por NaN y eliminar filas con faltantes
+    # (El rolling inicial siempre genera NaNs en las primeras filas)
+    df_rolling = df_rolling.replace([np.inf, -np.inf], np.nan).dropna()
     
-    # 2. Imputar valores faltantes en X
-    # Instanciamos el imputador con la estrategia 'mean' (promedio)
-    imputer = SimpleImputer(strategy='mean')
+    # Separar características (X) y etiqueta (y)
+    X = df_rolling.drop(columns=[target_col])
+    y = df_rolling[target_col]
     
-    # fit_transform aprende el promedio de cada columna y reemplaza los NaNs
-    # Devuelve un array de numpy, por lo que perdemos los nombres de columnas de pandas
-    X_imputed = imputer.fit_transform(X)
+    # División de datos para validación
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # 3. Escalar las características
-    # Instanciamos el escalador
-    scaler = StandardScaler()
+    # 3. Entrenar el modelo LinearSVC
+    modelo = LinearSVC(random_state=42, max_iter=10000)
+    modelo.fit(X_train, y_train)
     
-    # fit_transform calcula la media y la desviación estándar de X_imputed
-    # y luego transforma los datos: z = (x - u) / s
-    X_scaled = scaler.fit_transform(X_imputed)
+    # 4. Calcular Accuracy
+    predicciones = modelo.predict(X_test)
+    accuracy = accuracy_score(y_test, predicciones)
     
-    # 4. Devolver los dos arrays de numpy
-    return X_scaled, y
+    return (modelo, accuracy)
