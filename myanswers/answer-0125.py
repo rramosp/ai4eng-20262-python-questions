@@ -2,7 +2,6 @@ import pandas as pd
 
 def limpiar_dataset_ventas(df: pd.DataFrame) -> pd.DataFrame:
     # 1. Eliminar filas duplicadas
-    print (type(df))
     df = df.copy()
     df = df.drop_duplicates()
     
